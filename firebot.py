@@ -47,7 +47,6 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
         infobot.InfoBot.__init__(self, host, nicks, gecos, channels,
                                  **kwargs)
         self.ssl = ssl
-        self.nosy = True
         self.seen = {}
 
     def handle_connect(self):

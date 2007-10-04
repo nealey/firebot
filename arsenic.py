@@ -11,18 +11,36 @@ import os
 import time
 import socket
 
+def esc(arg):
+    return "'" + arg.replace("'", r"'\''") + "'"
+
+def lesc(args):
+    return [esc(arg) for arg in args]
+
 class Arsenic(firebot.FireBot, ProcBot):
-    debug = True
+    debug = False
     bindings = []
     ping_interval = 120
+    chatty = False                      # #x can't play nice
 
     def __init__(self, *args, **kwargs):
         firebot.FireBot.__init__(self, *args, **kwargs)
         self.seen = {}
         self.lusers = {}
-        self.heartbeat_interval=3
+        self.heartbeat_interval=0.01
         self.lag = 0
         self.whinecount = 0
+
+    def runcmd(self, sender, forum, addl, match):
+        command = match.group('command')
+        args = lesc(match.group('args').split(' '))
+        argstr = ' '.join(args)
+        Runner('%s %s' % (command, argstr),
+                   lambda l,r: self.proc_cb('%s: ' % command, sender, forum, l, r))
+    bindings.append((re.compile(r"^(?P<command>whois) +(?P<args>.*)$"),
+                     runcmd))
+    bindings.append((re.compile(r"^(?P<command>host) +(?P<args>.*)$"),
+                     runcmd))
 
     def rp(self, sender, forum, addl, match):
         command = 'rp'
@@ -52,7 +70,6 @@ class Arsenic(firebot.FireBot, ProcBot):
         what = match.group('what')
         when = time.time()
         key = '\013notes:%s' % whom
-        print key
         note = (when, sender.name(), what)
         try:
             n = self.db[key]
@@ -78,17 +95,17 @@ class Arsenic(firebot.FireBot, ProcBot):
         # get back into invite-only channels after a disconnect.
         who = luser.name()
         self.lusers[channel.name()][who] = luser
-        for chan in self.lusers.keys():
+        for chan, l in self.lusers.iteritems():
             if chan == channel.name():
                 continue
-            t = self.lusers[chan].get(who)
+            t = l.get(who)
             if t and t.host == luser.host:
-                self.write('INVITE %s %s' % (who, chan))
+                self.write(['INVITE', who, chan])
 
     def cmd_join(self, sender, forum, addl):
         if sender.name() == self.nick:
             # If it was me, get a channel listing and beg for ops
-            self.write('WHO %s' % (forum.name()))
+            self.write(['WHO', forum.name()])
             forum.notice('If you op me, I will op everyone who joins this channel.')
             self.lusers[forum.name()] = {}
         else:
@@ -108,10 +125,10 @@ class Arsenic(firebot.FireBot, ProcBot):
 
     def cmd_pong(self, sender, forum, addl):
         now = time.time()
-        print now
         self.lag = now - float(addl[0])
 
     def cmd_482(self, sender, forum, addl):
+        forum = self.recipient(addl[0])
         self.whinecount += 1
         if (self.whinecount == 2 or
             self.whinecount == 4 or
@@ -123,6 +140,15 @@ class Arsenic(firebot.FireBot, ProcBot):
 
 
 if __name__ == '__main__':
+    import daemon
+
+    debug = False
+
+    if not debug:
+        # Become a daemon
+        log = file('arsenic.log', 'a')
+        daemon.daemon('arsenic.pid', log, log)
+
     # Short URL server
     us = shorturl.start(('', 0))
     firebot.URLSERVER = (socket.gethostbyaddr(socket.gethostname())[0],
@@ -131,10 +157,11 @@ if __name__ == '__main__':
     NICK = ['arsenic']
     INFO = "I'm a little printf, short and stdout"
 
-    l1 = Arsenic(('greywolf.lanl.gov', 6697),
+    l1 = Arsenic(('irc.lanl.gov', 6667),
                  NICK,
                  INFO,
                  ["#x"],
-                 ssl=True)
+                 ssl=False)
+    l1.debug = debug
 
-    irc.run_forever()
+    irc.run_forever(0.01)

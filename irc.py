@@ -292,6 +292,9 @@ class SmartIRCHandler(IRCHandler):
 
     """
 
+    def recipient(self, name):
+        return recipient(self, name)
+
     def err(self, exception):
         if self.debug:
             traceback.print_exception(*exception)
@@ -349,14 +352,14 @@ class SmartIRCHandler(IRCHandler):
             # PRIVMSG ['neale!~user@127.0.0.1', 'PRIVMSG', 'firebot'] firebot, foo
             try:
                 if args[2][0] in '#&':
-                    forum = recipient(self, args[2])
+                    forum = self.recipient(args[2])
                 else:
                     forum = sender
                 addl = (text,)
             except IndexError:
                 addl = (text, args[1])
 	elif op in ("CPRIVMSG", "CNOTICE"):
-	    forum = recipient(self, args[2])
+	    forum = self.recipient(args[2])
 	    splits = text.split(" ")
 	    if splits[0] == "DCC":
 		op = "DC" + op
@@ -364,16 +367,16 @@ class SmartIRCHandler(IRCHandler):
 	    else:
 		addl = (splits[0],) + tuple(splits[1:])
 	elif op in ("KICK",):
-	    forum = recipient(self, args[2])
-	    addl = (recipient(self, args[3]), text)
+	    forum = self.recipient(args[2])
+	    addl = (self.recipient(args[3]), text)
 	elif op in ("MODE",):
-	    forum = recipient(self, args[2])
+	    forum = self.recipient(args[2])
 	    addl = args[3:]
 	elif op in ("JOIN", "PART"):
             try:
-                forum = recipient(self, args[2])
+                forum = self.recipient(args[2])
             except IndexError:
-                forum = recipient(self, text)
+                forum = self.recipient(text)
 	elif op in ("QUIT",):
 	    addl = (text,)
 	elif op in ("PING", "PONG"):
@@ -389,12 +392,12 @@ class SmartIRCHandler(IRCHandler):
             # Apparently there are two different standards for this
             # command.
             if text:
-                sender = recipient(self, text)
+                sender = self.recipient(text)
             else:
-                sender = recipient(self, args[2])
+                sender = self.recipient(args[2])
             addl = (unpack_nuhost(args)[0],)
         elif op in ("INVITE",):
-            forum = recipient(self, text)
+            forum = self.recipient(text)
 	else:
 	    try:
 		int(op)
