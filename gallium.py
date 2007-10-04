@@ -90,7 +90,7 @@ if __name__ == '__main__':
     import socket
     import daemon
     import sys
-    
+
     debug = False
     if "-d" in sys.argv:
         debug = True
@@ -105,10 +105,20 @@ if __name__ == '__main__':
     firebot.URLSERVER = (socket.gethostbyaddr(socket.gethostname())[0],
                          us.getsockname()[1])
 
+    # gallium
     gallium = Gallium(('fozzie.woozle.org', 6667),
                       ['gallium'],
                       "I'm a little printf, short and stdout",
                       ["#woozle", "#gallium"])
+    gallium.shorturlnotice = False
     gallium.debug = debug
+
+    # fink
+    fink = Gallium(('irc.oftc.net', 6667),
+                   ['fink'],
+                   "Do you like my hat?",
+                   ["#fast-food", "#orion"],
+                   dbname='fink.cdb')
+    fink.debug = debug
 
     irc.run_forever(0.5)

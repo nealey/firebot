@@ -274,13 +274,15 @@ class URLHandler(HTTPHandler):
         if self.path == '/':
             self.list_urls()
             return
-
-        try:
-            idx = int(self.path[1:])
-            url = URLS[idx]
-        except (ValueError, IndexError):
-            self.send_error(404)
-            return
+        elif self.path == '/newest':
+            url = URLS[-1]
+        else:
+            try:
+                idx = int(self.path[1:])
+                url = URLS[idx]
+            except (ValueError, IndexError):
+                self.send_error(404)
+                return
 
         self.send_response(301)
         self.send_header('Location', url)
@@ -297,7 +299,8 @@ class URLHandler(HTTPHandler):
         self.send_header('Content-Type', 'text/html')
         self.end_headers()
         self.send('<title>URLs</title><h1>URLs</h1><ol>\n')
-        for url in URLS:
+        for i in range(len(URLS), 0, -1):
+            url = URLS[i - 1]
             self.send('<li><a href="%s">%s</a></li>\n' % (url, url))
         self.send('</ol>\n')
 

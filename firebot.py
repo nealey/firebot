@@ -43,9 +43,10 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
     heartbeat_interval = 0.5
     ping_interval = 120
 
-    def __init__(self, host, nicks, gecos, channels, dbname='info.db', ssl=False, **kwargs):
+    def __init__(self, host, nicks, gecos, channels,
+                 dbname='info.cdb', ssl=False, **kwargs):
         infobot.InfoBot.__init__(self, host, nicks, gecos, channels,
-                                 **kwargs)
+                                 dbname=dbname, **kwargs)
         self.ssl = ssl
         self.nosy = True
         self.seen = {}
@@ -159,11 +160,16 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
     #bindings.append((re.compile(r"^\; *(?P<code>.+)$"), evalstr))
     #msg_cat['eval'] = ('%(code)s ==> %(ret)s',)
 
+    shorturlnotice = True
     def shorturl(self, sender, forum, addl, match):
         url = match.group('url')
         print ('url', url)
         idx = shorturl.add(url)
-        forum.msg('http://%s:%d/%d' % (URLSERVER[0], URLSERVER[1], idx))
+        if self.shorturlnotice:
+            f = forum.notice
+        else:
+            f = forum.msg
+        f('http://%s:%d/%d' % (URLSERVER[0], URLSERVER[1], idx))
     bindings.append((re.compile(r".*\b(?P<url>\b[a-z]+://[-a-z0-9_=!?#$@~%&*+/:;.,\w]+[-a-z0-9_=#$@~%&*+/\w])"),
                      shorturl))
 
