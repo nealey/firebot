@@ -1,7 +1,10 @@
 #! /bin/sh
 ## Restart the bot if it's not running
 
-# Gallium assumes everything's in the cwd
-cd $(basename $0)
+# You can specify which bot to run as a command line option;
+# default gallium
+bot=${1:-gallium}
 
-kill -0 $(cat gallium.pid) 2>/dev/null || ./gallium.py
+cd $(dirname $0)
+
+kill -0 $(cat $bot.pid) 2>/dev/null || ./$bot.py
