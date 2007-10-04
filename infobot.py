@@ -12,6 +12,7 @@ class InfoBot(BindingsBot):
     msg_cat = {}
     msg_cat.update(BindingsBot.msg_cat)
     bindings = []
+    chatty = True
 
     def __init__(self, host, nicks, gecos, channels, dbname='info.cdb'):
         BindingsBot.__init__(self, host, nicks, gecos, channels)
@@ -186,6 +187,9 @@ class InfoBot(BindingsBot):
 
     # Look something up in the DB
     def lookup(self, sender, forum, addl, match):
+        if not self.chatty:
+            if not match.group('me'):
+                return True
         key = match.group('key')
 
         # Try looking it up verbatim
@@ -218,34 +222,38 @@ class InfoBot(BindingsBot):
         resp = False
         old = self.getall(key)
         okay = self.gettext('okay', sender=sender.name())
-        if old:
-            if val in old:
-                if me:
-                    resp = self.gettext('same', key=key, val=val, old=old,
-                                        sender=sender.name())
+        try:
+            if old:
+                if val in old:
+                    if me:
+                        resp = self.gettext('same', key=key, val=val, old=old,
+                                            sender=sender.name())
+                    else:
+                        # Ignore duplicates
+                        resp = self.gettext('same', key=key, val=val, old=old,
+                                            sender=sender.name())
+                        pass
+                elif me:
+                    if also:
+                        self.set(key, old + [val])
+                        resp = okay
+                    elif no:
+                        self.set(key, [val])
+                        resp = okay
+                    else:
+                        if len(old) == 1:
+                            old = old[0]
+                        resp = self.gettext('but', key=key, val=val, old=old,
+                                            sender=sender.name())
                 else:
-                    # Ignore duplicates
-                    resp = self.gettext('same', key=key, val=val, old=old,
-                                        sender=sender.name())
-                    pass
-            elif me:
-                if also:
                     self.set(key, old + [val])
                     resp = okay
-                elif no:
-                    self.set(key, [val])
-                    resp = okay
-                else:
-                    if len(old) == 1:
-                        old = old[0]
-                    resp = self.gettext('but', key=key, val=val, old=old,
-                                        sender=sender.name())
             else:
-                self.set(key, old + [val])
+                self.set(key, (val,))
                 resp = okay
-        else:
-            self.set(key, (val,))
-            resp = okay
+        except seedyb.Locked:
+            resp = self.gettext('locked', key=key,
+                                sender=sender.name())
 
         if resp:
             if me:

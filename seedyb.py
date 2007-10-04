@@ -131,16 +131,16 @@ class SeedyB:
     ##
 
     def lock(self, key):
-        self.set(key, [''], special='lock')
+        self.set(key, ['locked'], special='lock')
 
     def unlock(self, key):
         self.set(key, [], special='lock')
 
     def is_locked(self, key):
         l = self.get(key, special='lock')
-        if l:
-            return True
-        return False
+        if l is None:
+            return False
+        return True
 
 
 open = SeedyB
