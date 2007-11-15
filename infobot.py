@@ -50,6 +50,8 @@ class InfoBot(BindingsBot):
     msg_cat['locked']  = ('Sorry, %(sender)s, %(key)s is locked.',)
     msg_cat['tell']    = ('%(sender)s wants you to know: %(string)s',)
     msg_cat['synced']  = ('Synchronized in %(time)f seconds.',)
+    msg_cat['quiet']   = ("Fine, %(sender)s, I'll shut up.",)
+    msg_cat['chatty']  = ("Thanks, %(sender)s, I've been chomping at the bit.",)
 
 
     def do_sync(self, sender, forum, addl, match):
@@ -279,6 +281,19 @@ class InfoBot(BindingsBot):
         key = match.group('key')
         val = match.group('val')
         return self.do_store(sender, forum, key, val, me=True, no=True, also=True)
+
+    def chatty_on(self, sender, forum, addl, match):
+        self.chatty = True
+        forum.msg(self.gettext('chatty', sender=sender.name()))
+    bindings.append((re.compile(r"^\008[,: ]+ be chatty", re.IGNORECASE),
+                     chatty_on))
+
+    def chatty_off(self, sender, forum, addl, match):
+        self.chatty = False
+        forum.msg(self.gettext('quiet', sender=sender.name()))
+    bindings.append((re.compile(r"^\008[,: ]+ shut up", re.IGNORECASE),
+                     chatty_off))
+
 
     # Pull in BindingsBot things
     bindings.extend(BindingsBot.bindings)

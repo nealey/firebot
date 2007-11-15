@@ -117,7 +117,7 @@ if __name__ == '__main__':
     fink = Gallium(('irc.oftc.net', 6667),
                    ['fink'],
                    "Do you like my hat?",
-                   ["#fast-food", "#orion"],
+                   ["#fast-food"],
                    dbname='fink.cdb')
     fink.debug = debug
 

@@ -84,6 +84,12 @@ answers with the factoid he gathered.
 <dt>firebot, forget _x_ from _y_</dt>
 <dd>forget a single entry (<em>x</em>) that is listed in _y_; _x_ can be a single word, it does not need to be the whole entry</dd>
 
+<dt>firebot, shut up</td>
+<dd>make the bot only respond to factoids when addressed specifically</dd>
+
+<dt>firebot, be chatty</td>
+<dd>make the bot respond to factoids even when not addressed</dd>
+
 </dl>
 
 In addition, the following tricks can be used within factiods:
