@@ -260,7 +260,8 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
     def generic_cmd(self, sender, forum, addl, match):
         cmd = match.group('cmd')
         args = match.group('args').split(' ')
-        argstr = ' '.join(procbot.lesc(args))
+        args = procbot.lesc(args)
+        argstr = ' '.join(args)
         Runner('%s %s' % (cmd, argstr),
                lambda l,r: self.proc_cb(None, sender, forum, l, r))
     bindings.append((re.compile(r"^(?P<cmd>host) (?P<args>.+)$"),

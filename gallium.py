@@ -6,13 +6,8 @@ import irc
 import re
 import os
 import random
+import feedparser
 from procbot import ProcBot, Runner
-
-def esc(arg):
-    return "'" + arg.replace("'", r"'\''") + "'"
-
-def lesc(args):
-    return [esc(arg) for arg in args]
 
 class Gallium(firebot.FireBot, ProcBot):
     opall = False
@@ -70,19 +65,34 @@ class Gallium(firebot.FireBot, ProcBot):
     bindings.append((re.compile(r"^u\+rand$"),
                      randglyph))
 
-    def runcmd(self, sender, forum, addl, match):
-        command = match.group('command')
-        args = match.group('args').split(' ')
-	args = [x.replace("'", "'\\''") for x in args]
-        argstr = ' '.join(args)
-        Runner('%s %s' % (command, argstr),
-                   lambda l,r: self.proc_cb('%s: ' % command, sender, forum, l, r))
-    bindings.append((re.compile(r"^(?P<command>whois) +(?P<args>.*)$"),
-                     runcmd))
-    bindings.append((re.compile(r"^(?P<command>host) +(?P<args>.*)$"),
-                     runcmd))
-
     bindings.extend(firebot.FireBot.bindings)
+
+
+class Wiibot(Gallium):
+    def __init__(self, *args, **kwargs):
+        Gallium.__init__(self, *args, **kwargs)
+        self.wiis = []
+        self.add_timer(27, self.check_wiis)
+
+    def check_wiis(self):
+        d = feedparser.parse('http://www.wiitracker.com/rss.xml')
+        try:
+            nt = []
+            for e in d.entries:
+                t = e.title
+                if 'no stock at this time' not in t:
+                  nt.append(t)
+            if self.wiis != nt:
+                if nt:
+                    for t in nt:
+                        self.announce('[wii] ' + t)
+                else:
+                    self.announce('[wii] No more wiis')
+            self.wiis = nt
+        except:
+            pass
+
+        self.add_timer(27, self.check_wiis)
 
 
 if __name__ == '__main__':
@@ -106,19 +116,19 @@ if __name__ == '__main__':
                          us.getsockname()[1])
 
     # gallium
-    gallium = Gallium(('fozzie.woozle.org', 6667),
-                      ['gallium'],
-                      "I'm a little printf, short and stdout",
-                      ["#woozle", "#gallium"])
+    gallium = Wiibot(('localhost', 6667),
+                     ['gallium'],
+                     "I'm a little printf, short and stdout",
+                     ["#woozle", "#gallium"])
     gallium.shorturlnotice = False
     gallium.debug = debug
 
     # fink
-    fink = Gallium(('irc.oftc.net', 6667),
-                   ['fink'],
-                   "Do you like my hat?",
-                   ["#fast-food"],
-                   dbname='fink.cdb')
+    fink = Wiibot(('irc.oftc.net', 6667),
+                  ['fink'],
+                  "Do you like my hat?",
+                  ["#fast-food"],
+                  dbname='fink.cdb')
     fink.debug = debug
 
     irc.run_forever(0.5)

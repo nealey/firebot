@@ -33,8 +33,9 @@ class Arsenic(firebot.FireBot, ProcBot):
 
     def runcmd(self, sender, forum, addl, match):
         command = match.group('command')
-        args = lesc(match.group('args').split(' '))
+        args = lesc(lesc(match.group('args').split(' ')))
         argstr = ' '.join(args)
+        print argstr
         Runner('%s %s' % (command, argstr),
                    lambda l,r: self.proc_cb('%s: ' % command, sender, forum, l, r))
     bindings.append((re.compile(r"^(?P<command>whois) +(?P<args>.*)$"),
@@ -142,7 +143,7 @@ class Arsenic(firebot.FireBot, ProcBot):
 if __name__ == '__main__':
     import daemon
 
-    debug = False
+    debug = True
 
     if not debug:
         # Become a daemon
