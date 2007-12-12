@@ -160,7 +160,7 @@ if __name__ == '__main__':
     l1 = Arsenic(('irc.lanl.gov', 6667),
                  NICK,
                  INFO,
-                 ["#x"],
+                 ["#x", "#csirt"],
                  ssl=False)
     l1.debug = debug
 

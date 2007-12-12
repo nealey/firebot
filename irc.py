@@ -472,11 +472,12 @@ class Bot(SmartIRCHandler):
 
             # Despool a line
             target, lines = which
-            line = lines[0]
-            target.msg(line)
-            del lines[0]
-            if not lines:
-                self._spool.remove((target, lines))
+            if lines:
+                line = lines[0]
+                target.msg(line)
+                del lines[0]
+            else:
+                self._spool.remove(which)
 
     def announce(self, text):
         for c in self.channels:
