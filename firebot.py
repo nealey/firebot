@@ -69,19 +69,6 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
         self.add_timer(self.ping_interval,
                        self.send_ping)
 
-    def note(self, sender, forum, addl, match):
-        whom = match.group('whom')
-        what = match.group('what')
-        when = time.time()
-        note = "%f:%s:%s" % (when, sender.name(), what)
-        n = self.getall(whom, special="note")
-        n.append(note)
-        self.set(whom, n, special="note")
-        forum.msg(self.gettext('okay', sender=sender.name()))
-    bindings.append((re.compile(r"^\008[:, ]+note (to )?(?P<whom>[^: ]+):? +(?P<what>.*)"),
-                    note))
-    bindings.append((re.compile(r"^\008[:, ]+later tell (?P<whom>[^: ]+):? +(?P<what>.*)"),
-                    note))
 
     def cmd_privmsg(self, sender, forum, addl):
         infobot.InfoBot.cmd_privmsg(self, sender, forum, addl)
@@ -168,9 +155,24 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
             f = forum.notice
         else:
             f = forum.msg
+        return True
         f('http://%s:%d/%d' % (URLSERVER[0], URLSERVER[1], idx))
     bindings.append((re.compile(r".*\b(?P<url>\b[a-z]+://[-a-z0-9_=!?#$@~%&*+/:;.,\w]+[-a-z0-9_=#$@~%&*+/\w])"),
                      shorturl))
+
+    def note(self, sender, forum, addl, match):
+        whom = match.group('whom')
+        what = match.group('what')
+        when = time.time()
+        note = "%f:%s:%s" % (when, sender.name(), what)
+        n = self.getall(whom, special="note")
+        n.append(note)
+        self.set(whom, n, special="note")
+        forum.msg(self.gettext('okay', sender=sender.name()))
+    bindings.append((re.compile(r"^\008[:, ]+note (to )?(?P<whom>[^: ]+):? +(?P<what>.*)"),
+                    note))
+    bindings.append((re.compile(r"^\008[:, ]+later tell (?P<whom>[^: ]+):? +(?P<what>.*)"),
+                    note))
 
     def cdecl(self, sender, forum, addl, match):
         jibberish = match.group('jibberish')
@@ -325,9 +327,9 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
                       d)
 
         symbol = match.group('symbol')
-        WebRetriever('http://quote.yahoo.com/d/quotes.csv?s=%s&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' % symbol,
+        WebRetriever('http://download.finance.yahoo.com/d/quotes.csv?s=%s&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' % symbol,
                      cb)
-    bindings.append((re.compile(r"^quote +(?P<symbol>[.a-zA-Z]+)$"),
+    bindings.append((re.compile(r"^quote +(?P<symbol>[-.a-zA-Z]+)$"),
                     quote))
 
     def currency(self, sender, forum, addl, match):
@@ -352,7 +354,7 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
             forum.msg(('%0.4f %s = %0.4f %s') %
                       (amt, frm, ans, to))
 
-        WebRetriever(('http://quote.yahoo.com/d/quotes.csv?s=%s%s%%3DX&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' %
+        WebRetriever(('http://download.finance.yahoo.com/d/quotes.csv?s=%s%s%%3DX&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' %
                       (frm, to)),
                      cb)
     bindings.append((re.compile(r"^how much is (?P<amt>[0-9.]+) ?(?P<from>[A-Z]{3}) in (?P<to>[A-Z]{3})\??$"),
@@ -377,7 +379,7 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
         else:
             amt = -1
         self.whuffie_mod(nick, amt)
-    bindings.append((re.compile(r"^(?P<nick>\w+)(?P<mod>\+\+|\-\-)[? ]*$"),
+    bindings.append((re.compile(r"^(?P<nick>[-\w]+)(?P<mod>\+\+|\-\-)[? ]*$"),
                      whuffie_modify))
     msg_cat['whuffie whore'] = ("Nothing happens.",
                                 'A hollow voice says, "Fool."')

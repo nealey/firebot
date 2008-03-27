@@ -65,14 +65,34 @@ class Gallium(firebot.FireBot, ProcBot):
     bindings.append((re.compile(r"^u\+rand$"),
                      randglyph))
 
+    def rollthebones(self, sender, forum, addl, match):
+        what = match.group(0)
+        howmany = int(match.group(1))
+        sides = int(match.group(2))
+        mult = int(match.group(4) or 1)
+        dice = []
+        acc = 0
+        for i in range(howmany):
+            j = random.randint(1, sides)
+            dice.append(j)
+            acc += j
+        acc *= mult
+        if howmany > 1:
+            forum.msg('%s: %d %r' % (what, acc, dice))
+        else:
+            forum.msg('%s: %d' % (what, acc))
+    bindings.append((re.compile(r'\b([1-9][0-9]*)d([1-9][0-9]*)(x([1-9][0-9]*))?\b'),
+                     rollthebones))
+
     bindings.extend(firebot.FireBot.bindings)
+
 
 
 class Wiibot(Gallium):
     def __init__(self, *args, **kwargs):
         Gallium.__init__(self, *args, **kwargs)
         self.wiis = []
-        self.add_timer(27, self.check_wiis)
+        self.add_timer(30, self.check_wiis)
 
     def check_wiis(self):
         d = feedparser.parse('http://www.wiitracker.com/rss.xml')
@@ -81,7 +101,12 @@ class Wiibot(Gallium):
             for e in d.entries:
                 t = e.title
                 if 'no stock at this time' not in t:
-                  nt.append(t)
+                    try:
+                        price = int(t[-3:])
+                    except:
+                        price = 1
+                    if price < 450:
+                        nt.append(t)
             if self.wiis != nt:
                 if nt:
                     for t in nt:
@@ -92,7 +117,7 @@ class Wiibot(Gallium):
         except:
             pass
 
-        self.add_timer(27, self.check_wiis)
+        self.add_timer(23, self.check_wiis)
 
 
 if __name__ == '__main__':
@@ -116,10 +141,10 @@ if __name__ == '__main__':
                          us.getsockname()[1])
 
     # gallium
-    gallium = Wiibot(('localhost', 6667),
-                     ['gallium'],
-                     "I'm a little printf, short and stdout",
-                     ["#woozle", "#gallium"])
+    gallium = Gallium(('localhost', 6667),
+                      ['gallium'],
+                      "I'm a little printf, short and stdout",
+                      ["#woozle", "#gallium"])
     gallium.shorturlnotice = False
     gallium.debug = debug
 
