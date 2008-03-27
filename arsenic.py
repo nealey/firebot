@@ -10,6 +10,7 @@ import re
 import os
 import time
 import socket
+import rp
 
 def esc(arg):
     return "'" + arg.replace("'", r"'\''") + "'"
@@ -21,7 +22,7 @@ class Arsenic(firebot.FireBot, ProcBot):
     debug = False
     bindings = []
     ping_interval = 120
-    chatty = False                      # #x can't play nice
+    chatty = True                       # Maybe #x can play nice now
 
     def __init__(self, *args, **kwargs):
         firebot.FireBot.__init__(self, *args, **kwargs)
@@ -44,12 +45,16 @@ class Arsenic(firebot.FireBot, ProcBot):
                      runcmd))
 
     def rp(self, sender, forum, addl, match):
-        command = 'rp'
-        argstr = match.group('args')
-        Finger(('db.nic.lanl.gov', 5833),
-               argstr,
-               lambda l: self.proc_cb('%s: ' % command, sender, forum, l, 0))
-    bindings.append((re.compile(r"^(?P<command>rp) +(?P<args>.*)$"),
+        long = match.group('long') and True
+        conn = rp.make_connection()
+        rows = rp.rp(match.group('args').strip(), conn=conn)
+        ret = rp.format(rows, long=long)
+        if long:
+            forum.msg('[Sending privately]')
+            self.despool(sender, ret)
+        else:
+            self.despool(forum, ret)
+    bindings.append((re.compile(r"^rp +(?P<long>(-l|--long) +)?(?P<args>.*)$"),
                      rp))
 
     def finger(self, sender, forum, addl, match):
@@ -66,21 +71,6 @@ class Arsenic(firebot.FireBot, ProcBot):
     bindings.append((re.compile(r"^\008[,: ]+ (what is the )?(server )?lag"),
                      lag))
 
-    def note(self, sender, forum, addl, match):
-        whom = match.group('whom')
-        what = match.group('what')
-        when = time.time()
-        key = '\013notes:%s' % whom
-        note = (when, sender.name(), what)
-        try:
-            n = self.db[key]
-        except KeyError:
-            n = []
-        n.append(note)
-        self.db[key] = n
-        forum.msg(self.gettext('okay', sender=sender.name()))
-    bindings.append((re.compile(r"^\008[:, ]+note (to )?(?P<whom>[^: ]+):? +(?P<what>.*)"),
-                    note))
 
     bindings.extend(firebot.FireBot.bindings)
 
@@ -142,8 +132,11 @@ class Arsenic(firebot.FireBot, ProcBot):
 
 if __name__ == '__main__':
     import daemon
+    import sys
 
-    debug = True
+    debug = False
+    if "-d" in sys.argv:
+        debug = True
 
     if not debug:
         # Become a daemon
