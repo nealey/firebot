@@ -2,6 +2,7 @@ import irc
 import re
 import random
 import types
+import os
 
 class Match:
     """A wrapper around a regex match, to replace \008 with a word.
@@ -38,21 +39,17 @@ class BindingsBot(irc.Bot):
         """Save the traceback for later inspection"""
         irc.Bot.err(self, exception)
         t,v,tb = exception
-        tbinfo = []
+        info = []
         while 1:
-            tbinfo.append ((
-                tb.tb_frame.f_code.co_filename,
-                tb.tb_frame.f_code.co_name,
-                str(tb.tb_lineno)
-                ))
+            info.append('%s:%d(%s)' % (os.path.basename(tb.tb_frame.f_code.co_filename),
+                                       tb.tb_lineno,
+                                       tb.tb_frame.f_code.co_name))
             tb = tb.tb_next
             if not tb:
                 break
-        # just to be safe
-        del tb
-        file, function, line = tbinfo[-1]
-        info = '[' + '] ['.join(map(lambda x: '|'.join(x), tbinfo)) + ']'
-        self.last_tb = '%s %s %s' % (t, v, info)
+        del tb                          # just to be safe
+        infostr = '[' + '] ['.join(info) + ']'
+        self.last_tb = '%s %s %s' % (t, v, infostr)
         print self.last_tb
 
     def matches(self, text):

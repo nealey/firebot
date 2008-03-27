@@ -169,14 +169,14 @@ class InfoBot(BindingsBot):
     bindings.append((re.compile(r"^\008[,: ]+unlock (?P<key>.+)$", re.IGNORECASE),
                      unlock_entry))
 
-    def forget_and_lock(self, sender, forum, addl, match):
+    def obliterate(self, sender, forum, addl, match):
         key = match.group('key')
         self.unlock(key)
         self.delete(key)
         self.lock(key)
         forum.msg(self.gettext('okay', key=key, sender=sender.name()))
-    bindings.append((re.compile(r"^\008[,: ]+forget and lock (?P<key>.+)$", re.IGNORECASE),
-                     forget_and_lock))
+    bindings.append((re.compile(r"^\008[,: ]+obliterate (?P<key>.+)$", re.IGNORECASE),
+                     obliterate))
 
     # Literal entry
     def literal(self, sender, forum, addl, match):
