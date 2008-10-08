@@ -36,7 +36,10 @@ class Gallium(firebot.FireBot, ProcBot):
 
     def server_status(self, sender, forum, addl, match):
         loadavg = file('/proc/loadavg').read().strip()
-	io_status = file('/proc/io_status').read().strip()
+        try:
+            io_status = file('/proc/io_status').read().strip()
+        except IOError:
+            io_status = "xen is awesome"
 	forum.msg('%s; load %s' % (io_status, loadavg))
     bindings.append((re.compile(r"^\008[:, ]+server status"),
                     server_status))
@@ -149,11 +152,13 @@ if __name__ == '__main__':
     gallium.debug = debug
 
     # fink
-    fink = Wiibot(('irc.oftc.net', 6667),
-                  ['fink'],
-                  "Do you like my hat?",
-                  ["#fast-food"],
-                  dbname='fink.cdb')
-    fink.debug = debug
+    if False:
+        fink = Gallium(('irc.oftc.net', 6667),
+                       ['fink'],
+                       "Do you like my hat?",
+                       ["#fast-food"],
+                       dbname='fink.cdb')
+        fink.debug = debug
+        fink.chatty = False
 
     irc.run_forever(0.5)

@@ -245,7 +245,7 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
             f = '1 ' + f[2:]
         Runner('/usr/bin/units -v %s %s' % (esc(f), esc(t)),
                lambda l,r: self.proc_cb(None, sender, forum, l, r))
-    bindings.append((re.compile(r"^units +(?P<from>.*) +in +(?P<to>.*)$"),
+    bindings.append((re.compile(r"^(?P<from>.*) +-> +(?P<to>.*)$"),
                      units))
     bindings.append((re.compile(r"^how many (?P<to>.*) in (?P<from>[^?]*)[?.!]*$"),
                      units))
