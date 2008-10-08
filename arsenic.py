@@ -11,6 +11,10 @@ import os
 import time
 import socket
 import rp
+import random
+import webretriever
+
+webretriever.proxy = ('proxyout.lanl.gov', 8080)
 
 def esc(arg):
     return "'" + arg.replace("'", r"'\''") + "'"
@@ -71,6 +75,16 @@ class Arsenic(firebot.FireBot, ProcBot):
     bindings.append((re.compile(r"^\008[,: ]+ (what is the )?(server )?lag"),
                      lag))
 
+
+    def pii(self, sender, forum, addl, match):
+        ssns = []
+        for i in range(10):
+            ssns.append('%03d-%02d-%04d' % (random.randint(1, 999),
+                                            random.randint(1, 99),
+                                            random.randint(1, 9999)))
+        forum.msg('Security incident!  %s' % ' '.join(ssns))
+    bindings.append((re.compile(r'^pii$'),
+                     pii))
 
     bindings.extend(firebot.FireBot.bindings)
 

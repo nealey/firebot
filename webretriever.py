@@ -7,23 +7,30 @@ import socket
 
 resolver = adns.init()
 
+proxy = None
+
 class WebRetriever(asynchat.async_chat):
     def __init__(self, url, body_cb):
         asynchat.async_chat.__init__(self)
         self.body_cb = body_cb
-        self.url = url
-        (self.scheme,
-         self.netloc,
-         self.path,
-         self.query,
-         self.fragment) = urlparse.urlsplit(url)
-        assert self.scheme == 'http'
-        try:
-            self.host, port = self.netloc.split(':')
-            self.port = int(port)
-        except ValueError:
-            self.host = self.netloc
-            self.port = 80
+        if proxy:
+            self.host, self.port = proxy
+            self.query = ''
+            self.fragment = ''
+            self.path = url
+        else:
+            (self.scheme,
+             self.netloc,
+             self.path,
+             self.query,
+             self.fragment) = urlparse.urlsplit(url)
+            assert self.scheme == 'http'
+            try:
+                self.host, port = self.netloc.split(':')
+                self.port = int(port)
+            except ValueError:
+                self.host = self.netloc
+                self.port = 80
         self.set_terminator('\n')
         self.in_headers = True
         self.inbuf = ''
