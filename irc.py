@@ -397,7 +397,12 @@ class SmartIRCHandler(IRCHandler):
                 sender = self.recipient(args[2])
             addl = (unpack_nuhost(args)[0],)
         elif op in ("INVITE",):
-            forum = self.recipient(text)
+            # INVITE [u'pflarr!~pflarr@www.clanspum.net', u'INVITE', u'gallium', u'#mysterious']
+            # INVITE [u'pflarr!~pflarr@www.clanspum.net', u'INVITE', u'gallium'] #mysterious
+            if len(args) > 3:
+                forum = self.recipient(args[3])
+            else:
+                forum = self.recipient(text)
 	else:
 	    try:
 		int(op)

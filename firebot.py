@@ -329,7 +329,7 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
         symbol = match.group('symbol')
         WebRetriever('http://download.finance.yahoo.com/d/quotes.csv?s=%s&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' % symbol,
                      cb)
-    bindings.append((re.compile(r"^quote +(?P<symbol>[-.a-zA-Z]+)$"),
+    bindings.append((re.compile(r"^quote +(?P<symbol>[-^.a-zA-Z]+)$"),
                     quote))
 
     def currency(self, sender, forum, addl, match):
