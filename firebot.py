@@ -212,6 +212,27 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
     bindings.append((re.compile(r"^\008[:, ]+in (?P<delay>[0-9]+) ?(?P<unit>[a-z]*) say (?P<what>.*)"),
                      delayed_say))
 
+    def _svc(self, forum, fd, what):
+        what = what.lower()
+        for line in fd:
+            for part in line.split():
+                subparts = part.split('/')
+                if what == subparts[0].lower():
+                    forum.msg(line)
+                    continue
+
+    def services(self, sender, forum, addl, match):
+        what = match.group('what')
+        self._svc(forum, file('/etc/services'), what)
+    bindings.append((re.compile(r"^services (?P<what>\w+)$"),
+                     services))
+
+    def protocols(self, sender, forum, addl, match):
+        what = match.group('what')
+        self._svc(forum, file('/etc/protocols'), what)
+    bindings.append((re.compile(r"^protocols (?P<what>\w+)$"),
+                     protocols))
+
     msg_cat['nodict'] = ("Sorry, boss, dict returns no lines for %(jibberish)s",)
     def dict(self, sender, forum, addl, match):
         jibberish = match.group('jibberish')
@@ -302,6 +323,25 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
     bindings.append((re.compile('weather (?P<zip>[0-9]{5})'),
                      weather))
 
+    def rollthebones(self, sender, forum, addl, match):
+        what = match.group(0)
+        howmany = int(match.group(1))
+        sides = int(match.group(2))
+        mult = int(match.group(4) or 1)
+        dice = []
+        acc = 0
+        for i in range(howmany):
+            j = random.randint(1, sides)
+            dice.append(j)
+            acc += j
+        acc *= mult
+        if howmany > 1:
+            forum.msg('%s: %d %r' % (what, acc, dice))
+        else:
+            forum.msg('%s: %d' % (what, acc))
+    bindings.append((re.compile(r'\b([1-9][0-9]*)d([1-9][0-9]*)(x([1-9][0-9]*))?\b'),
+                     rollthebones))
+
     def quote(self, sender, forum, addl, match):
         def cb(lines):
             if not lines:
@@ -329,7 +369,7 @@ class FireBot(infobot.InfoBot, procbot.ProcBot):
         symbol = match.group('symbol')
         WebRetriever('http://download.finance.yahoo.com/d/quotes.csv?s=%s&f=sl1d1t1c1ohgvj1pp2owern&e=.csv' % symbol,
                      cb)
-    bindings.append((re.compile(r"^quote +(?P<symbol>[-.a-zA-Z]+)$"),
+    bindings.append((re.compile(r"^quote +(?P<symbol>[-^.a-zA-Z]+)$"),
                     quote))
 
     def currency(self, sender, forum, addl, match):
