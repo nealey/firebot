@@ -38,8 +38,8 @@ class IRCHandler(asynchat.async_chat):
         self.connect(host)
 
     def handle_connect(self):
-	self.write(['NICK', self.nick])
-	self.write(['USER', self.nick, '+iw', self.nick], self.gecos)
+        self.write(['NICK', self.nick])
+        self.write(['USER', self.nick, '+iw', self.nick], self.gecos)
 
     def connect(self, host):
         self.waiting = False
@@ -90,55 +90,55 @@ class IRCHandler(asynchat.async_chat):
         self.parse_line(line)
 
     def write(self, args, *text):
-	"""Send out an IRC command
+        """Send out an IRC command
 
-	This function helps to prevent you from shooting yourself in the
-	foot, by forcing you to send commands that are in a valid format
-	(although it doesn't check the validity of the actual commands).
+        This function helps to prevent you from shooting yourself in the
+        foot, by forcing you to send commands that are in a valid format
+        (although it doesn't check the validity of the actual commands).
 
-	As we all know, IRC commands take the form
+        As we all know, IRC commands take the form
 
-	  :COMMAND ARG1 ARG2 ARG3 ... :text string
+          :COMMAND ARG1 ARG2 ARG3 ... :text string
 
-	where 'text string' is optional.  Well, that's exactly how this
-	function works.  Args is a list of length at least one, and text
-	string can be any number of strings.  You can call the function
-	like this:
+        where 'text string' is optional.  Well, that's exactly how this
+        function works.  Args is a list of length at least one, and text
+        string can be any number of strings.  You can call the function
+        like this:
 
-	  write(['PRIVMSG', nick], 'Hello 12')
+          write(['PRIVMSG', nick], 'Hello 12')
 
-	or like this:
+        or like this:
 
-	  write(['PRIVMSG', nick], 'Hello', '12')
+          write(['PRIVMSG', nick], 'Hello', '12')
 
         or even like this:
 
-	  write(['PRIVMSG', nick], 'Hello', 12)
+          write(['PRIVMSG', nick], 'Hello', 12)
 
-	And you'll get the same result with all three.
+        And you'll get the same result with all three.
 
-	"""
+        """
 
-	if (type(args) == types.StringType):
-	    cmd = args
-	else:
-	    cmd = u' '.join(args)
-	cmdstr = cmd
-	if (text):
-	    txt = ''
-	    for t in (text):
-		if type(t) in  (types.StringType, types.UnicodeType):
-		    txt = txt + ' ' + t
-		elif type(t) in (types.ListType, types.TupleType):
-		    for i in (t):
-			try:
-			    txt = ' '.join([txt, i])
-			except TypeError:
-			    txt = ' '.join([txt, repr(i)])
-		else:
-		    txt = ' '.join([txt, repr(t)])
-	    txt = txt[1:]
-	    cmdstr = "%s :%s" % (cmdstr, txt)
+        if (type(args) == types.StringType):
+            cmd = args
+        else:
+            cmd = u' '.join(args)
+        cmdstr = cmd
+        if (text):
+            txt = ''
+            for t in (text):
+                if type(t) in  (types.StringType, types.UnicodeType):
+                    txt = txt + ' ' + t
+                elif type(t) in (types.ListType, types.TupleType):
+                    for i in (t):
+                        try:
+                            txt = ' '.join([txt, i])
+                        except TypeError:
+                            txt = ' '.join([txt, repr(i)])
+                else:
+                    txt = ' '.join([txt, repr(t)])
+            txt = txt[1:]
+            cmdstr = "%s :%s" % (cmdstr, txt)
         encstr = cmdstr.encode('utf8', 'replace')
         self.dbg("-> %s " % encstr)
         try:
@@ -148,81 +148,81 @@ class IRCHandler(asynchat.async_chat):
 
 
     def parse_line(self, line):
-	"""Parse a server-provided line
+        """Parse a server-provided line
 
-	This does all the magic of parsing those ill-formatted IRC
-	messages.  It will also decide if a PRIVMSG or NOTICE is using
-	CTCP (the client-to-client protocol, which by convention is any
-	of the above messages with ^A on both ends of the text.
+        This does all the magic of parsing those ill-formatted IRC
+        messages.  It will also decide if a PRIVMSG or NOTICE is using
+        CTCP (the client-to-client protocol, which by convention is any
+        of the above messages with ^A on both ends of the text.
 
-	This function goes on to invoke self.eval_triggers on the parsed
-	data like this:
+        This function goes on to invoke self.eval_triggers on the parsed
+        data like this:
 
-	  self.eval_triggers(operation, arguments, text)
+          self.eval_triggers(operation, arguments, text)
 
-	where operation and text are strings, and arguments is a list.
+        where operation and text are strings, and arguments is a list.
 
-	It returns the same tuple (op, args, text).
+        It returns the same tuple (op, args, text).
 
-	"""
+        """
         line = line.decode('utf8', 'replace')
-	if (line[0] == ':'):
-	    with_uname = 1
-	    line = line [1:]
-	else:
-	    with_uname = 0
-	try:
-	    [args, text] = line.split(' :', 1)
-	    args = args.split()
-	except ValueError:
-	    args = line.split()
-	    text = ''
-	if (with_uname != 1):
-	    op = args[0]
-	elif ((args[1] in ["PRIVMSG", "NOTICE"]) and
-	      (text and (text[0] == '\001') and (text[-1] == '\001'))):
-	    op = "C" + args[1]
-	    text = text[1:-1]
-	else:
-	    op = args[1]
+        if (line[0] == ':'):
+            with_uname = 1
+            line = line [1:]
+        else:
+            with_uname = 0
+        try:
+            [args, text] = line.split(' :', 1)
+            args = args.split()
+        except ValueError:
+            args = line.split()
+            text = ''
+        if (with_uname != 1):
+            op = args[0]
+        elif ((args[1] in ["PRIVMSG", "NOTICE"]) and
+              (text and (text[0] == '\001') and (text[-1] == '\001'))):
+            op = "C" + args[1]
+            text = text[1:-1]
+        else:
+            op = args[1]
         self.dbg("<- %s %s %s" % (op, args, text))
-	self.handle(op, args, text)
-	return (op, args, text)
+        self.handle(op, args, text)
+        return (op, args, text)
 
 
     def handle(self, op, args, text):
-	"""Take action on a server message
+        """Take action on a server message
 
-	Right now, just invokes
+        Right now, just invokes
 
-	  self.do_[op](args, text)
+          self.do_[op](args, text)
 
-	where [op] is the operation passed in.
+        where [op] is the operation passed in.
 
-	This is a good method to overload if you want a really advanced
-	client supporting bindings.
+        This is a good method to overload if you want a really advanced
+        client supporting bindings.
 
-	"""
-	try:
-	    method = getattr(self, "do_" + lower(op))
-	except AttributeError:
+        """
+        try:
+            method = getattr(self, "do_" + lower(op))
+        except AttributeError:
             self.dbg("Unhandled: %s" % (op, args, text))
             return
-	method(args, text)
+        method(args, text)
 
 
 class Recipient:
     """Abstract recipient object"""
 
     def __init__(self, interface, name):
-	self._interface = interface
-	self._name = name
+        self._interface = interface
+        self._name = name
 
     def __repr__(self):
         return 'Recipient(%s)' % self.name()
 
     def name(self):
-	return self._name
+        return self._name
 
     def is_channel(self):
         return False
@@ -238,29 +238,29 @@ class Recipient:
         self.write([cmd, self._name], text)
 
     def msg(self, text):
-	"""Tell the recipient something"""
+        """Tell the recipient something"""
 
-	self.cmd("PRIVMSG", text)
+        self.cmd("PRIVMSG", text)
 
     def notice(self, text):
-	"""Send a notice to the recipient"""
+        """Send a notice to the recipient"""
 
-	self.cmd("NOTICE", text)
+        self.cmd("NOTICE", text)
 
     def ctcp(self, command, text):
-	"""Send a CTCP command to the recipient"""
+        """Send a CTCP command to the recipient"""
 
-	return self.msg("\001%s %s\001" % (upper(command), text))
+        return self.msg("\001%s %s\001" % (upper(command), text))
 
     def act(self, text):
-	"""Send an action to the recipient"""
+        """Send an action to the recipient"""
 
-	return self.ctcp("ACTION", text)
+        return self.ctcp("ACTION", text)
 
     def cnotice(self, command, text):
-	"""Send a CTCP notice to the recipient"""
+        """Send a CTCP notice to the recipient"""
 
-	return self.notice("\001%s %s\001" % (upper(command), text))
+        return self.notice("\001%s %s\001" % (upper(command), text))
 
 class Channel(Recipient):
     def __repr__(self):
@@ -281,9 +281,9 @@ class User(Recipient):
 
 def recipient(interface, name):
     if name[0] in ["&", "#"]:
-	return Channel(interface, name)
+        return Channel(interface, name)
     else:
-	return User(interface, name, None, None)
+        return User(interface, name, None, None)
 
 class SmartIRCHandler(IRCHandler):
     """This is like the IRCHandler, except it creates Recipient objects
@@ -300,7 +300,7 @@ class SmartIRCHandler(IRCHandler):
             traceback.print_exception(*exception)
 
     def handle(self, op, args, text):
-	"""Parse more, creating objects and stuff
+        """Parse more, creating objects and stuff
 
         makes a call to self.handle_op(sender, forum, addl)
 
@@ -314,22 +314,22 @@ class SmartIRCHandler(IRCHandler):
         always send a reply to forum, and it will be sent back in an
         appropriate manner (ie. the way you expect).
 
-	addl is a tuple, containing additional information which might
-	be relelvant.  Here's what it will contain, based on the server
-	operation:
+        addl is a tuple, containing additional information which might
+        be relelvant.  Here's what it will contain, based on the server
+        operation:
 
           op       | addl
-	  ---------+----------------
-	  PRIVMSG  | text of the message
-	  NOTICE   | text of the notice
-	  CPRIVMSG | CTCP command,  text of the command
-	  CNOTICE  | CTCP response, text of the response
-	  KICK *   | victim of kick, kick text
-	  MODE *   | all mode args
-	  JOIN *   | empty
-	  PART *   | empty
-  	  QUIT     | quit message
-	  PING     | ping text
+          ---------+----------------
+          PRIVMSG  | text of the message
+          NOTICE   | text of the notice
+          CPRIVMSG | CTCP command,  text of the command
+          CNOTICE  | CTCP response, text of the response
+          KICK *   | victim of kick, kick text
+          MODE *   | all mode args
+          JOIN *   | empty
+          PART *   | empty
+          QUIT     | quit message
+          PING     | ping text
           NICK !   | old nickname
           others   | all arguments; text is last element
 
@@ -338,16 +338,16 @@ class SmartIRCHandler(IRCHandler):
         ! The sender for the NICK command is the *new* nickname.  This
           is so you can send messages to the sender object and they'll
           go to the right place.
-	"""
+        """
 
-	try:
+        try:
             sender = User(self, *unpack_nuhost(args))
-	except ValueError:
-	    sender = None
-	forum = None
-	addl = ()
+        except ValueError:
+            sender = None
+        forum = None
+        addl = ()
 
-	if op in ("PRIVMSG", "NOTICE"):
+        if op in ("PRIVMSG", "NOTICE"):
             # PRIVMSG ['neale!~user@127.0.0.1', 'PRIVMSG', '#hydra'] firebot, foo
             # PRIVMSG ['neale!~user@127.0.0.1', 'PRIVMSG', 'firebot'] firebot, foo
             try:
@@ -358,31 +358,31 @@ class SmartIRCHandler(IRCHandler):
                 addl = (text,)
             except IndexError:
                 addl = (text, args[1])
-	elif op in ("CPRIVMSG", "CNOTICE"):
-	    forum = self.recipient(args[2])
-	    splits = text.split(" ")
-	    if splits[0] == "DCC":
-		op = "DC" + op
-		addl = (splits[1],) + tuple(splits[2:])
-	    else:
-		addl = (splits[0],) + tuple(splits[1:])
-	elif op in ("KICK",):
-	    forum = self.recipient(args[2])
-	    addl = (self.recipient(args[3]), text)
-	elif op in ("MODE",):
-	    forum = self.recipient(args[2])
-	    addl = args[3:]
-	elif op in ("JOIN", "PART"):
+        elif op in ("CPRIVMSG", "CNOTICE"):
+            forum = self.recipient(args[2])
+            splits = text.split(" ")
+            if splits[0] == "DCC":
+                op = "DC" + op
+                addl = (splits[1],) + tuple(splits[2:])
+            else:
+                addl = (splits[0],) + tuple(splits[1:])
+        elif op in ("KICK",):
+            forum = self.recipient(args[2])
+            addl = (self.recipient(args[3]), text)
+        elif op in ("MODE",):
+            forum = self.recipient(args[2])
+            addl = args[3:]
+        elif op in ("JOIN", "PART"):
             try:
                 forum = self.recipient(args[2])
             except IndexError:
                 forum = self.recipient(text)
-	elif op in ("QUIT",):
-	    addl = (text,)
-	elif op in ("PING", "PONG"):
+        elif op in ("QUIT",):
+            addl = (text,)
+        elif op in ("PING", "PONG"):
             # PING ['PING'] us.boogernet.org.
             # PONG ['irc.foonet.com', 'PONG', 'irc.foonet.com'] 1114199424
-	    addl = (text,)
+            addl = (text,)
         elif op in ("NICK",):
             # NICK ['brad!~brad@10.168.2.33', 'NICK'] bradaway
             #
@@ -403,10 +403,10 @@ class SmartIRCHandler(IRCHandler):
                 forum = self.recipient(args[3])
             else:
                 forum = self.recipient(text)
-	else:
-	    try:
-		int(op)
-	    except ValueError:
+        else:
+            try:
+                int(op)
+            except ValueError:
                 self.dbg("WARNING: unknown server code: %s" % op)
             addl = tuple(args[3:]) + (text,)
 
@@ -508,13 +508,13 @@ class Bot(SmartIRCHandler):
     def close(self, final=False):
         SmartIRCHandler.close(self)
         if not final:
-	    self.dbg("Connection closed, reconnecting...")
-	    self.waiting = True
-	    self.connected = 0
-	    # Wait a bit and reconnect
+            self.dbg("Connection closed, reconnecting...")
+            self.waiting = True
+            self.connected = 0
+            # Wait a bit and reconnect
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.add_timer(23, lambda : self.connect(self.host))
-	    
+            
 
     def handle_close(self):
         self.close()
@@ -530,7 +530,7 @@ lcletters = "abcdefghijklmnopqrstuvwxyz{}|"
 ultrans = string.maketrans(ucletters, lcletters)
 lutrans = string.maketrans(lcletters, ucletters)
 casetrans = string.maketrans(''.join([ucletters, lcletters]),
-			     ''.join([lcletters, ucletters]))
+                             ''.join([lcletters, ucletters]))
 
 def upper(s):
     """Convert a string to upper case.
@@ -590,10 +590,10 @@ def unpack_nuhost(nuhost):
     """
 
     try:
-	[nick, uhost] = string.split(nuhost[0], '!', 1)
-	[user, host] = string.split(uhost, '@', 1)
+        [nick, uhost] = string.split(nuhost[0], '!', 1)
+        [user, host] = string.split(uhost, '@', 1)
     except ValueError:
-	raise ValueError, "not in nick!user@host format"
+        raise ValueError, "not in nick!user@host format"
     return (nick, user, host)
 
 def run_forever(timeout=2.0):
