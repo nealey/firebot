@@ -10,7 +10,7 @@ CHANNELS = ["#idiotbot"]
 class IdiotBot(irc.Bot):
     debug = True
 
-	# Every time anybody says anything, respond like an idiot.
+    # Every time anybody says anything, respond like an idiot.
     def cmd_privmsg(self, sender, forum, addl):
         forum.msg("I am an idiot!")
 
