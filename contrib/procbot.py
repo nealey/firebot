@@ -23,7 +23,7 @@ class Runner(async_proc.process_dispatcher):
 def esc(arg):
     "Shell-escape an argument"
 
-    return "'" + arg.replace("'", "'\''") + "'"
+    return "'" + arg.replace("'", "'\\''") + "'"
 
 
 def lesc(args):
